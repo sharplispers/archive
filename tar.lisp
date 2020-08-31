@@ -96,7 +96,7 @@
   ((typeflag :initarg :typeflag :reader typeflag))
   (:documentation "Signaled when a tar entry that ARCHIVE doesn't understand is encountered."))
 
-(define-condition unhandled-read-header-error (tar-error)
+(define-condition unhandled-read-header-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (let ((flag (typeflag condition)))
@@ -109,14 +109,14 @@
                   (format stream "Can't understand typeflag: ~A" flag))))))
   (:documentation "Signaled when attempting to parse an unsupported tar entry."))
 
-(define-condition unhandled-extract-entry-error (tar-error)
+(define-condition unhandled-extract-entry-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (format stream "Don't know how to extract a type ~A tar entry yet"
                      (typeflag condition))))
   (:documentation "Signaled when attempting to extract an unsupported tar entry."))
 
-(define-condition unhandled-write-entry-error (tar-error)
+(define-condition unhandled-write-entry-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (format stream "Don't know how to write a type ~A tar entry yet"
