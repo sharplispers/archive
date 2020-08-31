@@ -96,7 +96,7 @@
   ((typeflag :initarg :typeflag :reader typeflag))
   (:documentation "Signaled when a tar entry that ARCHIVE doesn't understand is encountered."))
 
-(define-condition unhandled-read-header-error (tar-error)
+(define-condition unhandled-read-header-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (let ((flag (typeflag condition)))
@@ -109,14 +109,14 @@
                   (format stream "Can't understand typeflag: ~A" flag))))))
   (:documentation "Signaled when attempting to parse an unsupported tar entry."))
 
-(define-condition unhandled-extract-entry-error (tar-error)
+(define-condition unhandled-extract-entry-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (format stream "Don't know how to extract a type ~A tar entry yet"
                      (typeflag condition))))
   (:documentation "Signaled when attempting to extract an unsupported tar entry."))
 
-(define-condition unhandled-write-entry-error (tar-error)
+(define-condition unhandled-write-entry-error (unhandled-error)
   ()
   (:report (lambda (condition stream)
              (format stream "Don't know how to write a type ~A tar entry yet"
@@ -259,7 +259,7 @@
 (defun null-block-p (block start)
   (declare (type (simple-array (unsigned-byte 8) (*)) block))
   (null (position-if-not #'zerop block
-			 :start start :end (+ start +tar-n-block-bytes+))))
+                         :start start :end (+ start +tar-n-block-bytes+))))
 
 (defparameter *modefuns-to-typeflags*
   (list (cons 'isreg +tar-regular-file+)
@@ -278,21 +278,21 @@
 (defmethod create-entry-from-pathname ((archive tar-archive) pathname)
   (let ((stat (stat pathname)))
     (make-instance 'tar-entry
-		   :pathname pathname
-		   :mode (logand +permissions-mask+
-				 (stat-mode stat))
-		   :typeflag (typeflag-for-mode (stat-mode stat))
-		   :uid (stat-uid stat)
-		   :gid (stat-gid stat)
-		   :size (stat-size stat)
-		   :mtime (stat-mtime stat))))
+                   :pathname pathname
+                   :mode (logand +permissions-mask+
+                                 (stat-mode stat))
+                   :typeflag (typeflag-for-mode (stat-mode stat))
+                   :uid (stat-uid stat)
+                   :gid (stat-gid stat)
+                   :size (stat-size stat)
+                   :mtime (stat-mtime stat))))
 
 (defmethod create-entry-from-pathname :around ((archive tar-archive) pathname)
   (let ((instance (call-next-method)))
     (when (fad:directory-pathname-p pathname)
       (change-class instance 'directory-tar-entry))
     instance))
-    
+
 (defmethod write-entry-to-archive ((archive tar-archive) (entry tar-entry)
                                    &key (stream t))
   (let ((namestring (namestring (entry-pathname entry))))
@@ -432,7 +432,7 @@
             (t
              (error 'unhandled-read-header-error
                     :typeflag (typeflag entry))))))))
-            
+
 ;;; FIXME: must add permissions handling, mtime, etc.  maybe those should
 ;;; be specified by flags or somesuch?
 (defmethod extract-entry ((archive tar-archive) (entry tar-entry))
